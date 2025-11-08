@@ -3,7 +3,7 @@
 
 <!-- Banner -->
 <h1 align="center">
-  <img src="https://qu.ax/bGtog.jpg" width="700" alt="Itsuki-Nakano IA Banner Ofc"/>
+  <img src="https://qu.ax/yhEAM.jpg" width="700" alt="Itsuki-Nakano IA Banner Ofc"/>
 </h1>
 
 [![Version](https://img.shields.io/badge/Version-6.4.1-pink.svg)]()
