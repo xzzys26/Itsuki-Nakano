@@ -11,7 +11,7 @@
     "node": ">=18.18"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "github:xzzys26/Leo-BaileysV5",
+    "@whiskeysockets/baileys": "github:leoxito/Quintillizas-BaileysV6",
     "awesome-phonenumber": "^5.5.1",
     "boxen": "^7.1.1",
     "chalk": "^5.3.0",
