@@ -46,7 +46,7 @@ npm start
 
 ### **`ʟᴇᴏ ᴘʀᴏᴘɪᴇᴛᴀʀɪᴏ ᴅᴇʟ ᴘʀᴏʏᴇᴄᴛᴏ`**
 <a
-href="https://github.com/xzzys26"><img src="https://github.com/xzzys26.png" width="130" height="130" alt="xzzys26"/></a>
+href="https://github.com/leoxito"><img src="https://github.com/leoxito.png" width="130" height="130" alt="xzzys26"/></a>
 
 
 ## Colaboradores y Agradecimiento ❤️
