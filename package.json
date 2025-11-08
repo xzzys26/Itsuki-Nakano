@@ -11,7 +11,7 @@
     "node": ">=18.18"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "github:leoxito/Nakano-BaileysV6",
+    "@whiskeysockets/baileys": "github:leoxito/Nakano-BaileysIA",
     "awesome-phonenumber": "^5.5.1",
     "boxen": "^7.1.1",
     "chalk": "^5.3.0",
