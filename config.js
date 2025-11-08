@@ -16,11 +16,9 @@ global.owner = [
    ['16503058299', '𝙇𝙚𝙤   𝙭𝙯𝙨𝙮  🦇🩸', true],
    ['5216641784469', 'BrayanOFC', true],
 // son pndjos todos menos David y Leo por poco también son
-   ['15614809253', 'AyeitsRyze', true],
    ['573133374132', 'YO SOY YO', true],
    ['51921826291', '𝐒𝐨𝐲𝐌𝐚𝐲𝐜𝐨𝐥 <𝟑', true],
    ['50493732693', 'Ado 🐢', true],
-   ['18482389332', 'Cliente01', true], 
    ['5216671548329', 'Legna', true]
 ];
 
