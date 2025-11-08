@@ -1,4 +1,4 @@
-# 🎀 Itsuki Nakano - IA V2 ✨
+# `👑 Itsuki Nakano - IA V2` ✨
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Oswald+Code&pause=1000&color=FF69B4&width=435&lines=Bienvenido+al+Repositorio;Itsuki+Nakano+IA+V2;Versión+6.4.1+Oficial;Creado+por+LeoXzzsy;)](https://git.io/typing-svg)
 
 <!-- Banner -->
@@ -49,7 +49,7 @@ npm start
 href="https://github.com/leoxito"><img src="https://github.com/leoxito.png" width="130" height="130" alt="xzzys26"/></a>
 
 
-## Colaboradores y Agradecimiento ❤️
+## `Colaboradores y Agradecimiento` ❤️
 
 <a href="https://github.com/xzzys26/Itsuki-IA/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=xzzys26/Itsuki-IA&cache=bust" alt="Contribuidores">
