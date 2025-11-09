@@ -51,6 +51,6 @@ href="https://github.com/leoxito"><img src="https://github.com/leoxito.png" widt
 
 ## `Colaboradores y Agradecimiento` ❤️
 
-<a href="https://github.com/xzzys26/ItsukiNakano-V2/graphs/contributors">
+<a href="https://github.com/xzzys26/Itsuki-NakanoV2/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=xzzys26/Itsuki-IA&cache=bust" alt="Contribuidores">
 </a>
