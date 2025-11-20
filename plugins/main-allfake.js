@@ -8,7 +8,7 @@ let AraChu2 = {
   getRandom: () => 'https://files.catbox.moe/9cbbyf.jpg'
 }
 
-let owner = ['16503058299']
+let owner = ['573187418668']
 let conn = {
   getName: (jid) => 'Bot Owner'
 }
@@ -21,7 +21,7 @@ let snh = 'https://tiktok.com'
 let syt = 'https://youtube.com'
 
 global.docs = ['doc1', 'doc2', 'doc3']
-global.nomorown = '18493907272@s.whatsapp.net'
+global.nomorown = '573187418668@s.whatsapp.net'
 global.logo = 'https://raw.githubusercontent.com/WillZek/Storage-CB2/main/images/54dfe27a73cf.jpg'
 global.iconorcanal = 'https://raw.githubusercontent.com/WillZek/Storage-CB2/main/images/54dfe27a73cf.jpg'
 global.metanombre = 'Meta AI'
@@ -80,7 +80,7 @@ try {
   global.docss = pickRandom(global.docs)
   global.ephemeral = "86400"
   global.kontak2 = [
-    [owner[0], await conn.getName(owner[0] + '16503058299@s.whatsapp.net'), 'Desarrollador del bot', 'xzzysultra@gmail.com', true],
+    [owner[0], await conn.getName(owner[0] + '573187418668@s.whatsapp.net'), 'Desarrollador del bot', 'xzzysultra@gmail.com', true],
     [owner[1], await conn.getName(owner[1] + '@s.whatsapp.net'), 'Desarrollador del bot', 'xzzysultra@gmail.com', true],
   ]
   global.pppkecil = AraChu2.getRandom()
