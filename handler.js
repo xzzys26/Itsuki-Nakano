@@ -1,4 +1,4 @@
-import { smsg, parseUserTargets, getUserInfo } from './lib/simple.js'
+import { smsg } from "./lib/simple.js" 
 import { format } from 'util'
 import { fileURLToPath } from 'url'
 import path, { join } from 'path'
@@ -46,6 +46,78 @@ if (!global.maintenanceCommands) global.maintenanceCommands = []
 
 // INICIALIZAR SISTEMA SELF MODE POR GRUPO
 if (!global.ownerNumber) global.ownerNumber = '16503058299@s.whatsapp.net'
+
+// FUNCIÓN PARSEUSERTARGETS - CORRECCIÓN DEL ERROR
+const parseUserTargets = async (text, context) => {
+  if (!text) return []
+  
+  const targets = []
+  const parts = text.split(/[\s,]+/).filter(Boolean)
+  
+  for (const part of parts) {
+    let jid = part.trim()
+    
+    // Si es una mención (@)
+    if (jid.startsWith('@')) {
+      const num = jid.slice(1)
+      const normalized = normalizeCore(num)
+      if (normalized) {
+        targets.push(`${normalized}@s.whatsapp.net`)
+      }
+      continue
+    }
+    
+    // Si es un número de teléfono
+    if (/^[\d+][\d\s\-()]+$/.test(jid)) {
+      const normalized = normalizeCore(jid)
+      if (normalized) {
+        targets.push(`${normalized}@s.whatsapp.net`)
+      }
+      continue
+    }
+    
+    // Si ya es un JID completo
+    if (jid.includes('@s.whatsapp.net') || jid.includes('@g.us')) {
+      targets.push(jid)
+      continue
+    }
+    
+    // Intentar normalizar como último recurso
+    const normalized = normalizeJid(jid)
+    if (normalized) {
+      targets.push(normalized)
+    }
+  }
+  
+  return [...new Set(targets.filter(Boolean))]
+}
+
+// Función auxiliar para obtener información del usuario
+const getUserInfo = async (jid, conn) => {
+  try {
+    const normalizedJid = normalizeJid(jid)
+    if (!normalizedJid) return null
+    
+    const user = global.db.data.users[normalizedJid]
+    const name = await conn.getName(normalizedJid).catch(() => '')
+    const number = prettyNum(normalizedJid)
+    
+    return {
+      jid: normalizedJid,
+      name: name || number,
+      number: number,
+      premium: user?.premium || false,
+      registered: user?.registered || false,
+      exp: user?.exp || 0,
+      limit: user?.limit || 0,
+      level: user?.level || 0,
+      banned: user?.banned || false
+    }
+  } catch (error) {
+    console.error('Error en getUserInfo:', error)
+    return null
+  }
+}
 
 function pickOwners() {
   const arr = Array.isArray(global.owner) ? global.owner : []
