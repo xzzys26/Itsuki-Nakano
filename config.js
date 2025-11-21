@@ -26,7 +26,6 @@ global.mods = ['573187418668', '595972314588', '51921826291']
 global.suittag = ['573187418668', '595972314588', '51921826291']
 global.prems = ['573187418668', '595972314588', '51921826291', '5216671548329']
 global.roowner = ['573187418668'] // Solo el root owner (dueño principal)
-]
 
 // Información del bot 
 global.libreria = 'Baileys'
