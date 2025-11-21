@@ -10,9 +10,8 @@ import { dirname } from 'path'
 
 global.__dirname = (url) => dirname(fileURLToPath(url));
 
-global.roowner = ['573187418668'] // Solo el root owner (dueño principal)
-
 // Configuraciones principales
+global.roowner = ['573187418668'] // Solo el root owner (dueño principal)
 global.owner = [
    ['595972314588', '۪〬.࠭⤿ 👑 ⋅ 𝘿𝙖𝙫𝙞𝙙   𝙭𝙯𝙨𝙮', true],
    ['573187418668', '𝙇𝙚𝙤   𝙭𝙯𝙨𝙮  🦇🩸', true],
