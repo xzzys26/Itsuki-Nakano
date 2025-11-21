@@ -10,6 +10,8 @@ import { dirname } from 'path'
 
 global.__dirname = (url) => dirname(fileURLToPath(url));
 
+global.roowner = ['573187418668'] // Solo el root owner (dueño principal)
+
 // Configuraciones principales
 global.owner = [
    ['595972314588', '۪〬.࠭⤿ 👑 ⋅ 𝘿𝙖𝙫𝙞𝙙   𝙭𝙯𝙨𝙮', true],
@@ -25,7 +27,6 @@ global.owner = [
 global.mods = ['573187418668', '595972314588', '51921826291']
 global.suittag = ['573187418668', '595972314588', '51921826291']
 global.prems = ['573187418668', '595972314588', '51921826291', '5216671548329']
-global.roowner = ['573187418668'] // Solo el root owner (dueño principal)
 
 // Información del bot 
 global.libreria = 'Baileys'
