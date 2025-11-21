@@ -26,7 +26,7 @@ global.logo = 'https://raw.githubusercontent.com/WillZek/Storage-CB2/main/images
 global.iconorcanal = 'https://raw.githubusercontent.com/WillZek/Storage-CB2/main/images/54dfe27a73cf.jpg'
 global.metanombre = 'Meta AI'
 
-global.idchannel = '120363404434164076@newsletter'
+global.idchannel = '120363403726798403@newsletter'
 global.namechannel = '𝆺𝅥 𝆭 ִ ֗ 🍉 𝐈𝐭𝐬𝐮𝐤𝐢 ┆ 𝐍𝐚𝐤𝐚𝐧𝐨𝐯2 𝐏𝐫𝐞𝐦𝐁𝐨𝐭 ✨ ౨ৎ˚₊‧'
 let icono = 'https://files.catbox.moe/ncb958.jpg'
 let iconoden = 'https://raw.githubusercontent.com/WillZek/Storage-CB2/main/images/d110942e81b3.jpg'
