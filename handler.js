@@ -1,4 +1,4 @@
-import { smsg } from "./lib/simple.js" 
+import { smsg, parseUserTargets, getUserInfo } from './lib/simple.js'
 import { format } from 'util'
 import { fileURLToPath } from 'url'
 import path, { join } from 'path'
@@ -40,84 +40,6 @@ function decodeJidCompat(jid = '') { if (!jid) return jid; if (/:[0-9A-Fa-f]+@/.
 if (!global.db) global.db = { data: { users: {}, chats: {}, settings: {}, stats: {} } }
 if (!global.db.data) global.db.data = { users: {}, chats: {}, settings: {}, stats: {} }
 if (typeof global.loadDatabase !== 'function') global.loadDatabase = async () => {}
-
-// INICIALIZAR SISTEMA DE MANTENIMIENTO
-if (!global.maintenanceCommands) global.maintenanceCommands = []
-
-// INICIALIZAR SISTEMA SELF MODE POR GRUPO
-if (!global.ownerNumber) global.ownerNumber = '16503058299@s.whatsapp.net'
-
-// FUNCIÓN PARSEUSERTARGETS - CORRECCIÓN DEL ERROR
-const parseUserTargets = async (text, context) => {
-  if (!text) return []
-  
-  const targets = []
-  const parts = text.split(/[\s,]+/).filter(Boolean)
-  
-  for (const part of parts) {
-    let jid = part.trim()
-    
-    // Si es una mención (@)
-    if (jid.startsWith('@')) {
-      const num = jid.slice(1)
-      const normalized = normalizeCore(num)
-      if (normalized) {
-        targets.push(`${normalized}@s.whatsapp.net`)
-      }
-      continue
-    }
-    
-    // Si es un número de teléfono
-    if (/^[\d+][\d\s\-()]+$/.test(jid)) {
-      const normalized = normalizeCore(jid)
-      if (normalized) {
-        targets.push(`${normalized}@s.whatsapp.net`)
-      }
-      continue
-    }
-    
-    // Si ya es un JID completo
-    if (jid.includes('@s.whatsapp.net') || jid.includes('@g.us')) {
-      targets.push(jid)
-      continue
-    }
-    
-    // Intentar normalizar como último recurso
-    const normalized = normalizeJid(jid)
-    if (normalized) {
-      targets.push(normalized)
-    }
-  }
-  
-  return [...new Set(targets.filter(Boolean))]
-}
-
-// Función auxiliar para obtener información del usuario
-const getUserInfo = async (jid, conn) => {
-  try {
-    const normalizedJid = normalizeJid(jid)
-    if (!normalizedJid) return null
-    
-    const user = global.db.data.users[normalizedJid]
-    const name = await conn.getName(normalizedJid).catch(() => '')
-    const number = prettyNum(normalizedJid)
-    
-    return {
-      jid: normalizedJid,
-      name: name || number,
-      number: number,
-      premium: user?.premium || false,
-      registered: user?.registered || false,
-      exp: user?.exp || 0,
-      limit: user?.limit || 0,
-      level: user?.level || 0,
-      banned: user?.banned || false
-    }
-  } catch (error) {
-    console.error('Error en getUserInfo:', error)
-    return null
-  }
-}
 
 function pickOwners() {
   const arr = Array.isArray(global.owner) ? global.owner : []
@@ -263,27 +185,6 @@ export async function handler(chatUpdate) {
   try {
     m = smsg(this, m) || m
     if (!m) return
-
-    // ===== SISTEMA SELF MODE POR GRUPO - VERIFICACIÓN MEJORADA =====
-    if (m.isGroup) {
-      const chatData = global.db.data.chats[m.chat] || {}
-
-      // Verificar si este grupo tiene self mode activado
-      if (chatData.selfMode) {
-        const userNum = normalizeCore(m.sender)
-        const ownerNum = normalizeCore(global.ownerNumber)
-
-        // Si el usuario NO es el owner Y tampoco está en la lista de owners global, ignorar
-        if (m.sender !== global.ownerNumber && !isOwnerJid(userNum)) {
-          console.log(`🌸 Self Mode Grupo: Mensaje ignorado de ${m.sender} en ${m.chat}`)
-          await this.sendMessage(m.chat, { 
-          }).catch(() => {})
-          return // Ignora completamente el mensaje
-        }
-        // Si ES el owner o está en la lista de owners, permitir el mensaje
-        console.log(`🌸 Self Mode Grupo: Mensaje permitido para owner ${m.sender}`)
-      }
-    }
 
     if (!m.isGroup) return
     m.exp = 0
@@ -529,13 +430,12 @@ export async function handler(chatUpdate) {
         } catch (e) { console.error(e) }
       }
       if (!opts['restrict']) if (plugin.tags && plugin.tags.includes('admin')) { continue }
+
+      // CORRECCIÓN: Expresión regular fija
       const str2Regex = str => str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
 
-      // ===== INICIO DE LA MODIFICACIÓN =====
-      // Ahora _prefix será la RegExp /^[./!#]/ o un customPrefix
       let _prefix = plugin.customPrefix ? plugin.customPrefix : /^[./!#]/
 
-      // Esta lógica ahora ancla los prefijos de string/array al inicio
       let match = (_prefix instanceof RegExp ?
         [[_prefix.exec(m.text), _prefix]] :
         Array.isArray(_prefix) ?
@@ -544,33 +444,6 @@ export async function handler(chatUpdate) {
             [[new RegExp('^' + str2Regex(_prefix)).exec(m.text), new RegExp('^' + str2Regex(_prefix))]] :
             [[[], new RegExp]]
       ).find(p => p[1])
-      // ===== FIN DE LA MODIFICACIÓN =====
-
-      // ===== SISTEMA DE MANTENIMIENTO ITSUNI - INICIO =====
-      if (match && match[0]) {
-          usedPrefix = match[0][0]
-          let noPrefix = m.text.replace(usedPrefix, '')
-          let [command, ...args] = noPrefix.trim().split` `.filter(v => v)
-          command = (command || '').toLowerCase()
-
-          // Verificar si el comando está en mantenimiento
-          if (global.maintenanceCommands && global.maintenanceCommands.includes(command)) {
-              // Permitir siempre los comandos de mantenimiento
-              const allowedCommands = ['mantenimiento', 'mant', 'maintenance', 'mantenimientos', 'limpiarmantenimiento']
-              if (!allowedCommands.includes(command)) {
-                  return this.reply(m.chat, 
-                      `🍙🚧 *ITSUKI - Comando en Mantenimiento* ⚠️\n\n` +
-                      `❌ El comando *${command}* está temporalmente desactivado\n\n` +
-                      `📚 "Este comando está en mantenimiento o mejoras"\n` +
-                      `🛠️ "Por favor, intenta más tarde"\n\n` +
-                      `🔒 *Estado:* Desactivado hasta nuevo aviso\n\n` +
-                      `🎀 "Gracias por tu comprensión"`,
-                      m
-                  )
-              }
-          }
-      }
-      // ===== SISTEMA DE MANTENIMIENTO ITSUNI - FIN =====
 
       const rolesCtx = await roleFor(m.sender)
       if (typeof plugin.before === 'function') {
@@ -616,10 +489,7 @@ export async function handler(chatUpdate) {
         try {
           const botIdKey = this.user?.jid || (this.user?.id ? this.decodeJid(this.user.id) : 'bot')
           const autotypeEnabled = !!global.db?.data?.settings?.[botIdKey]?.autotypeDotOnly
-          // ===== MODIFICACIÓN PARA AUTOTYPE =====
-          // Ahora autotype funcionará si el prefijo usado es solo .
           if (autotypeEnabled && usedPrefix === '.' && typeof this.sendPresenceUpdate === 'function') {
-          // ======================================
             this._presenceGates.set(m.chat, true)
             didPresence = true
             await this.sendPresenceUpdate('composing', m.chat)
@@ -689,16 +559,16 @@ global.dfail = (type, m, conn, usedPrefix) => {
   const ctxDev    = global.rcanaldev || {}
   const ctxInfo   = global.rcanalx   || {}
   const cfg = {
-    rownwer:   { text: '🌸 𝗝𝗮𝗷𝗮𝗷𝗮 𝗲𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝗽𝘂𝗲𝗱𝗲 𝘂𝘀𝗮𝗿𝗹𝗼 𝗺𝗶 𝗰𝗿𝗲𝗮𝗱𝗼𝗿 😤', ctx: ctxDenied },
-owner:    { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝗲𝘀𝘁𝗮́ 𝗿𝗲𝘀𝗲𝗿𝘃𝗮𝗱𝗼 𝗽𝗮𝗿𝗮 𝗺𝗶 𝗰𝗿𝗲𝗮𝗱𝗼𝗿 𝘆 𝗹𝗼𝘀 𝘀𝘂𝗯-𝗯𝗼𝘁𝘀 🙄', ctx: ctxDenied },
-mods:     { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝗹𝗼 𝗽𝘂𝗲𝗱𝗲𝗻 𝘂𝘀𝗮𝗿 𝗹𝗼𝘀 𝗺𝗼𝗱𝗲𝗿𝗮𝗱𝗼𝗿𝗲𝘀 💢', ctx: ctxDev },
-premium:  { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝗲𝘀 𝗲𝘅𝗰𝗹𝘂𝘀𝗶𝘃𝗼 𝗽𝗮𝗿𝗮 𝘂𝘀𝘂𝗮𝗿𝗶𝗼𝘀 𝗽𝗿𝗲𝗺𝗶𝘂𝗺 💖', ctx: ctxDenied },
-group:    { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝘀𝗲 𝗽𝘂𝗲𝗱𝗲 𝘂𝘀𝗮𝗿 𝗲𝗻 𝗴𝗿𝘂𝗽𝗼𝘀 😡', ctx: ctxInfo },
-private:  { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝗳𝘂𝗻𝗰𝗶𝗼𝗻𝗮 𝗲𝗻 𝗺𝗶 𝗰𝗵𝗮𝘁 𝗽𝗿𝗶𝘃𝗮𝗱𝗼 😏', ctx: ctxInfo },
-admin:    { text: '🌸 𝗦𝗼𝗹𝗼 𝗹𝗼𝘀 𝗮𝗱𝗺𝗶𝗻𝗶𝘀𝘁𝗿𝗮𝗱𝗼𝗿𝗲𝘀 𝗱𝗲𝗹 𝗴𝗿𝘂𝗽𝗼 𝗽𝘂𝗲𝗱𝗲𝗻 𝘂𝘀𝗮𝗿 𝗲𝘀𝘁𝗼 😤', ctx: ctxDenied },
-botAdmin: { text: '🌸 𝗡𝗲𝗰𝗲𝘀𝗶𝘁𝗼 𝘀𝗲𝗿 𝗮𝗱𝗺𝗶𝗻𝗶𝘀𝘁𝗿𝗮𝗱𝗼𝗿𝗮 𝗽𝗮𝗿𝗮 𝗲𝗷𝗲𝗰𝘂𝘁𝗮𝗿 𝗲𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 🙄', ctx: ctxInfo },
-unreg:    { text: '🌸 𝗡𝗼 𝗲𝘀𝘁𝗮́𝘀 𝗿𝗲𝗴𝗶𝘀𝘁𝗿𝗮𝗱𝗼 𝗮𝘂́𝗻\n\n𝗥𝗲𝗴𝗶́𝘀𝘁𝗿𝗮𝘁𝗲 𝗽𝗿𝗶𝗺𝗲𝗿𝗼 𝗰𝗼𝗻:\n\n.𝗿𝗲𝗴 𝗻𝗼𝗺𝗯𝗿𝗲.𝗲𝗱𝗮𝗱\n\n𝗘𝗷𝗲𝗺𝗽𝗹𝗼: .𝗿𝗲𝗴 𝗜𝘁𝘀𝘂𝗸𝗶.𝟭𝟴\n\n𝗬 𝗻𝗮𝗱𝗮 𝗱𝗲 𝗷𝘂𝗴𝗮𝗿 𝗰𝗼𝗻 𝗹𝗼𝘀 * * 😒', ctx: ctxInfo },
-restrict: { text: '🌸 𝗘𝘀𝘁𝗮 𝗰𝗮𝗿𝗮𝗰𝘁𝗲𝗿𝗶́𝘀𝘁𝗶𝗰𝗮 𝗲𝘀𝘁𝗮́ 𝗱𝗲𝘀𝗵𝗮𝗯𝗶𝗹𝗶𝘁𝗮𝗱𝗮 💢', ctx: ctxInfo },
+    rowner:   { text: '🌸 𝗝𝗮𝗷𝗮𝗷𝗮 𝗲𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝗽𝘂𝗲𝗱𝗲 𝘂𝘀𝗮𝗿𝗹𝗼 𝗺𝗶 𝗰𝗿𝗲𝗮𝗱𝗼𝗿 😤', ctx: ctxDenied },
+    owner:    { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝗲𝘀𝘁𝗮́ 𝗿𝗲𝘀𝗲𝗿𝘃𝗮𝗱𝗼 𝗽𝗮𝗿𝗮 𝗺𝗶 𝗰𝗿𝗲𝗮𝗱𝗼𝗿 𝘆 𝗹𝗼𝘀 𝘀𝘂𝗯-𝗯𝗼𝘁𝘀 🙄', ctx: ctxDenied },
+    mods:     { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝗹𝗼 𝗽𝘂𝗲𝗱𝗲𝗻 𝘂𝘀𝗮𝗿 𝗹𝗼𝘀 𝗺𝗼𝗱𝗲𝗿𝗮𝗱𝗼𝗿𝗲𝘀 💢', ctx: ctxDev },
+    premium:  { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝗲𝘀 𝗲𝘅𝗰𝗹𝘂𝘀𝗶𝘃𝗼 𝗽𝗮𝗿𝗮 𝘂𝘀𝘂𝗮𝗿𝗶𝗼𝘀 𝗽𝗿𝗲𝗺𝗶𝘂𝗺 💖', ctx: ctxDenied },
+    group:    { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝘀𝗲 𝗽𝘂𝗲𝗱𝗲 𝘂𝘀𝗮𝗿 𝗲𝗻 𝗴𝗿𝘂𝗽𝗼𝘀 😡', ctx: ctxInfo },
+    private:  { text: '🌸 𝗘𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 𝘀𝗼𝗹𝗼 𝗳𝘂𝗻𝗰𝗶𝗼𝗻𝗮 𝗲𝗻 𝗺𝗶 𝗰𝗵𝗮𝘁 𝗽𝗿𝗶𝘃𝗮𝗱𝗼 😏', ctx: ctxInfo },
+    admin:    { text: '🌸 𝗦𝗼𝗹𝗼 𝗹𝗼𝘀 𝗮𝗱𝗺𝗶𝗻𝗶𝘀𝘁𝗿𝗮𝗱𝗼𝗿𝗲𝘀 𝗱𝗲𝗹 𝗴𝗿𝘂𝗽𝗼 𝗽𝘂𝗲𝗱𝗲𝗻 𝘂𝘀𝗮𝗿 𝗲𝘀𝘁𝗼 😤', ctx: ctxDenied },
+    botAdmin: { text: '🌸 𝗡𝗲𝗰𝗲𝘀𝗶𝘁𝗼 𝘀𝗲𝗿 𝗮𝗱𝗺𝗶𝗻𝗶𝘀𝘁𝗿𝗮𝗱𝗼𝗿𝗮 𝗽𝗮𝗿𝗮 𝗲𝗷𝗲𝗰𝘂𝘁𝗮𝗿 𝗲𝘀𝘁𝗲 𝗰𝗼𝗺𝗮𝗻𝗱𝗼 🙄', ctx: ctxInfo },
+    unreg:    { text: '🌸 𝗡𝗼 𝗲𝘀𝘁𝗮́𝘀 𝗿𝗲𝗴𝗶𝘀𝘁𝗿𝗮𝗱𝗼 𝗮𝘂́𝗻\n\n𝗥𝗲𝗴𝗶́𝘀𝘁𝗿𝗮𝘁𝗲 𝗽𝗿𝗶𝗺𝗲𝗿𝗼 𝗰𝗼𝗻:\n\n.𝗿𝗲𝗴 𝗻𝗼𝗺𝗯𝗿𝗲.𝗲𝗱𝗮𝗱\n\n𝗘𝗷𝗲𝗺𝗽𝗹𝗼: .𝗿𝗲𝗴 𝗜𝘁𝘀𝘂𝗸𝗶.𝟭𝟴\n\n𝗬 𝗻𝗮𝗱𝗮 𝗱𝗲 𝗷𝘂𝗴𝗮𝗿 𝗰𝗼𝗻 𝗹𝗼𝘀 * * 😒', ctx: ctxInfo },
+    restrict: { text: '🌸 𝗘𝘀𝘁𝗮 𝗰𝗮𝗿𝗮𝗰𝘁𝗲𝗿𝗶́𝘀𝘁𝗶𝗰𝗮 𝗲𝘀𝘁𝗮́ 𝗱𝗲𝘀𝗵𝗮𝗯𝗶𝗹𝗶𝘁𝗮𝗱𝗮 💢', ctx: ctxInfo },
 }[type]
 if (!cfg) return
 return conn.reply(m.chat, cfg.text, m, cfg.ctx).then(() => m.react('✖️'))
